@@ -17,7 +17,12 @@ This script un-mangles Javascript obscured by common techniques.
 
 `source deobfuscate/bin/activate`
 
+`pip install -r requirements.txt`
+
 `pip install -e .`
 
 `pytest`
+
+`coverage run -m pytest && coverage report`
+
 

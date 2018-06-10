@@ -27,7 +27,7 @@ def generate_linebreaks(lines, *args):
 
 def recur_split(token, delim):
     """
-    Splits token on delimiter, returns 1d array of tokens.
+    Splits token on delimiter, returns flat array of tokens.
     """
     if not token:
         return None

@@ -1,9 +1,8 @@
-import sys
 import pytest
 from deobfuscate import deobfuscate
 
 
-@pytest.mark.parametrize(('input', 'expected'), (
+@pytest.mark.parametrize(('unparsed', 'expected'), (
     ('1;2', ['1;', '2']),
     ('1', ['1']),
     (';1', [';', '1']),
@@ -14,15 +13,15 @@ from deobfuscate import deobfuscate
     ([['1;2'], '3'], ['1;', '2', '3']),
     ([['1;2;'], '3;'], ['1;', '2;', '3;']),
     ([['1;2;', ['1', '2', '3']], '3;'], ['1;', '2;', '1', '2', '3', '3;']),
-    ([[[]], [],[[[]]],[]], []),
+    ([[[]], [], [[[]]], []], []),
     (';;;', [';', ';', ';']),
     ([';'], [';']),
     ))
-def test_recur_split(input, expected):
-    assert deobfuscate.recur_split(input, ';') == expected
+def test_recur_split(unparsed, expected):
+    assert deobfuscate.recur_split(unparsed, ';') == expected
 
 
-@pytest.mark.parametrize(('input', 'expected'), (
+@pytest.mark.parametrize(('unparsed', 'expected'), (
     (';1', [';', '1']),
     ('1,2;3', ['1,2;', '3']),
     ('1;2;3', ['1;', '2;', '3']),
@@ -37,11 +36,11 @@ def test_recur_split(input, expected):
     ([['1;2;'], '3;'], ['1;', '2;', '3;']),
     ([['1;2;', ['1', '2', '3']], '3;'], ['1;', '2;', '1', '2', '3', '3;']),
     ))
-def test_generate_linebreaks_no_delim(input, expected):
-    assert deobfuscate.generate_linebreaks(input) == expected
+def test_generate_linebreaks_no_delim(unparsed, expected):
+    assert deobfuscate.generate_linebreaks(unparsed) == expected
 
 
-@pytest.mark.parametrize(('input', 'delims', 'expected'), (
+@pytest.mark.parametrize(('unparsed', 'delims', 'expected'), (
     ('1,2;3', [';', ','], ['1,', '2;', '3']),
     (['1'], [';', ','], ['1']),
     ([], [';', ','], None),
@@ -50,6 +49,8 @@ def test_generate_linebreaks_no_delim(input, expected):
     ([['2;3,1,2;3,'], ',1;2,'], [';', ','], ['2;', '3,', '1,', '2;', '3,', ',', '1;', '2,']),
     (';,;,;,', [';', ','], [';', ',', ';', ',', ';', ',']),
     ([[';,'], ';', [',', [';,']]], [';', ','], [';', ',', ';', ',', ';', ',']),
+    (['123,1;:2:3', ';', '::', ['1', ',2']], [';', ':', ','],
+     ['123,', '1;', ':', '2:', '3', ';', ':', ':', '1', ',', '2'])
     ))
-def test_generate_linebreaks_delims(input, delims, expected):
-    assert deobfuscate.generate_linebreaks(input, *delims) == expected
+def test_generate_linebreaks_delims(unparsed, delims, expected):
+    assert deobfuscate.generate_linebreaks(unparsed, *delims) == expected
