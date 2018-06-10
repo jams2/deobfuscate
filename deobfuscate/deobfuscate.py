@@ -17,6 +17,8 @@ def generate_linebreaks(lines, *args):
     Wrapper for recur_split.
     Returns a list of tokens split on ';', or specified delimiters.
     """
+    if not isinstance(lines, str) and not isinstance(lines, list):
+        raise TypeError(f'Expected list or str, got {type(lines)}')
     if not args:
         lines = recur_split(lines, ';')
     else:
@@ -51,6 +53,8 @@ def parse_hexchars(lines):
     """
     Find hexadecimal chars and substitute them with corresponding characters.
     """
+    if not isinstance(lines, list):
+        raise TypeError(f'Expected list, got {type(lines)}')
     hex_char_regexp = r'\\x(\d[0-9a-zA-Z]{1})'
     output = []
     for line in lines:
@@ -67,13 +71,24 @@ def parse_hexchars(lines):
 def find_arrays(lines):
     """
     Read array declarations into a dict.
+    Todo: should parse arbitrarily nested lists
     """
-    array_regexp = r'^(?:var)*\s*(\w+)\s*=\s*\[(.*)\]\s*'
+    if not isinstance(lines, list):
+        raise TypeError(f'Expected list, got {type(lines)}')
+    array_regexp = r'^(?:var|let|const)*\s*(\w+)\s*=\s*\[(.*)\]\s*'
     arrays = {}
     for line in lines:
         array_match = re.search(array_regexp, line)
         if array_match:
-            arrays[array_match.group(1)] = array_match.group(2).replace('"', '').split(', ')
+            array_name = array_match.group(1)
+            arrays[array_name] = [x.lstrip(' ') for x in array_match.group(2).split(',')]
+            for i in range(0, len(arrays[array_name]) - 1):
+                if (arrays[array_name][i].startswith('[') and
+                        arrays[array_name][i+1].endswith(']')):
+                    arrays[array_name][i] = [arrays[array_name][i].lstrip('['),
+                                             arrays[array_name][i+1].rstrip(']')]
+                    arrays[array_name][i+1] = None
+            arrays[array_name] = [x for x in arrays[array_name] if x]
     return arrays
 
 
@@ -83,8 +98,7 @@ def substitute_array_references(arrays, lines):
     to substitute array references with actual values (use with care - doesn't account for
     arrays mutated after declaration).
     """
-    array_index_regexp = [(array_name,
-                           re.compile(array_name +r'\[(\d+)\]'))
+    array_index_regexp = [(array_name, re.compile(array_name +r'\[(\d+)\]'))
                           for array_name in arrays.keys()]
     parsed_indexes = []
     for line in lines:
