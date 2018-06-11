@@ -95,3 +95,37 @@ def test_find_arrays_error():
 def test_find_arrays(unparsed, expected):
     assert deobfuscate.find_arrays(unparsed) == expected
 
+
+@pytest.mark.parametrize(('unparsed', 'expected'), (
+    (['1', '2', '3', '4'], ['1', '2', '3', '4']),
+    (['1', '[2', '3', '4]', '5'], ['1', ['2', '3', '4'], '5']),
+    (['1', '[2', '3]', '4'], ['1', ['2', '3'], '4']),
+    (['1', '[2', '3]', '[4', '5]'], ['1', ['2', '3'], ['4', '5']]),
+    (['1', '[2', '3]', '[4', '[6', '7', '8]', '5]'],
+     ['1', ['2', '3'], ['4', ['6', '7', '8'], '5']]),
+    ))
+def test_parse_arrays(unparsed, expected):
+    assert deobfuscate.parse_arrays(unparsed) == expected
+
+
+def test_find_arrays_error():
+    with pytest.raises(TypeError):
+        deobfuscate.parse_arrays('string')
+    with pytest.raises(ValueError):
+        deobfuscate.parse_arrays([])
+
+
+@pytest.mark.parametrize(('uncounted', 'count'), (
+    ([1, 2, 3], 3),
+    ([1, [2, 3, 4], 5], 5),
+    ([1, 2, [3, 4], [5, [6, 7], 8], 9], 9),
+    ('1', 1),
+    ('123', 1),
+    ))
+def test_nested_len(uncounted, count):
+    assert deobfuscate.nested_len(uncounted) == count
+
+
+def test_nested_len_error():
+    with pytest.raises(TypeError):
+        deobfuscate.nested_len({})

@@ -68,28 +68,63 @@ def parse_hexchars(lines):
     return output
 
 
-def find_arrays(lines):
+def find_arrays(tokens):
     """
     Read array declarations into a dict.
-    Todo: should parse arbitrarily nested lists
     """
-    if not isinstance(lines, list):
-        raise TypeError(f'Expected list, got {type(lines)}')
+    if not isinstance(tokens, list):
+        raise TypeError(f'Expected list, got {type(tokens)}')
     array_regexp = r'^(?:var|let|const)*\s*(\w+)\s*=\s*\[(.*)\]\s*'
     arrays = {}
-    for line in lines:
-        array_match = re.search(array_regexp, line)
+    for token in tokens:
+        array_match = re.search(array_regexp, token)
         if array_match:
             array_name = array_match.group(1)
-            arrays[array_name] = [x.lstrip(' ') for x in array_match.group(2).split(',')]
-            for i in range(0, len(arrays[array_name]) - 1):
-                if (arrays[array_name][i].startswith('[') and
-                        arrays[array_name][i+1].endswith(']')):
-                    arrays[array_name][i] = [arrays[array_name][i].lstrip('['),
-                                             arrays[array_name][i+1].rstrip(']')]
-                    arrays[array_name][i+1] = None
-            arrays[array_name] = [x for x in arrays[array_name] if x]
+            arrays[array_name] = parse_arrays(
+                [x.lstrip(' ') for x in array_match.group(2).split(',')])
     return arrays
+
+
+def parse_arrays(token):
+    """
+    token (list)
+    Handle arbitrarily nested lists
+    """
+    if not token:
+        raise ValueError('Unexpected empty token.')
+    elif not isinstance(token, list):
+        raise TypeError(f'Expected list, got {type(token)}')
+    parsed = []
+    i = 0
+    while i < len(token):
+        if token[i].startswith('['):
+            token[i] = token[i][1:]
+            parsed.append(parse_arrays(token[i:]))
+        elif token[i].endswith(']'):
+            parsed.append(token[i][:-1])
+            return parsed
+        else:
+            parsed.append(token[i])
+        i += nested_len(parsed[-1])
+    return parsed
+
+
+def nested_len(token):
+    """
+    Count all items in list of lists (of lists...)
+    """
+    i = 0
+    if isinstance(token, list):
+        for elt in token:
+            if isinstance(elt, list):
+                i += nested_len(elt)
+            else:
+                i += 1
+    elif isinstance(token, str):
+        i += 1
+    else:
+        raise TypeError(f'Expected str or list, got {type(token)}')
+    return i
 
 
 def substitute_array_references(arrays, lines):
