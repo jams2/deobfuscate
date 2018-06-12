@@ -8,8 +8,6 @@ Fri 25 May 14:25:22 BST 2018
 
 import argparse
 import re
-import sys
-from collections import deque
 
 
 def generate_linebreaks(tokens, *args):
@@ -131,7 +129,7 @@ def nested_len(tokens):
 
 def substitute_array_references(tokens, arrays):
     """
-    create list of tuples with (arrayname, pattern('arrayname[x]'),
+    Create list of tuples with (arrayname, pattern('arrayname[x]'),
     to substitute array references with actual values (use with care - doesn't account for
     arrays mutated after declaration).
     """
@@ -139,31 +137,47 @@ def substitute_array_references(tokens, arrays):
         raise TypeError(f'Expected str or list, got {type(tokens)}')
     elif isinstance(tokens, str):
         tokens = [tokens]
-    array_index_regexp = [(array_name, re.compile(array_name +r'(?:\[(\d+)\])+'))
+    array_index_regexp = [(array_name, re.compile(array_name + r'(?:\[\d+\])+'))
                           for array_name in arrays.keys()]
-    parsed_indexes = []
+    parsed_tokens = []
     for token in tokens:
         new_token = token
         for pattern in array_index_regexp:
-            index_match = pattern[1].findall(new_token)
+            index_match = pattern[1].search(new_token)
             while index_match:
-                print(index_match)
-                indices = deque(index_match)
-                print(indices)
-                print(arrays[pattern[0]])
-                print()
+                indices = get_indices(index_match[0])
                 new_token = (new_token.replace(index_match[0],
-                                               array_reference(arrays[pattern[0]], indices)))
+                                               get_array_reference(arrays[pattern[0]], indices)))
                 index_match = re.findall(pattern[1], new_token)
-        parsed_indexes.append(new_token)
-    return parsed_indexes
+        parsed_tokens.append(new_token)
+    return parsed_tokens
 
 
-def array_reference(array, indices):
-    while len(indices) > 0:
-        array = array[int(indices.popleft())]
-    return array        
+def get_indices(match):
+    """
+    Parse an (multidimensional) array reference, return a list of the indices.
+    Example: 'array[1][2][3]' returns [1, 2, 3]
+    """
+    match = match[match.index('['):]
+    indices = []
+    curr_num = ''
+    for char in match:
+        if char == '[':
+            curr_num = ''
+        elif char.isnumeric():
+            curr_num += char
+        elif char == ']':
+            indices.append(int(curr_num))
+    return indices
 
+
+def get_array_reference(array, indices):
+    """
+    Get nested list items.
+    """
+    for i in indices:
+        array = array[i]
+    return array
 
 
 def main():
@@ -173,11 +187,11 @@ def main():
                         help='destination file, print to STDOUT if not specified')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-l', '--insert-linebreaks', action='store_true',
-                        help='insert linebreaks after ";", or specify delimiters with -d')
+                       help='insert linebreaks after ";", or specify delimiters with -d')
     group.add_argument('-d', '--delimiter', nargs='+', metavar='delim',
                        help='space separated list of delimiters to break lines on. ' +
-                            'characters such as ";" may need to be escaped.')
-    parser.add_argument('-x', '--parse-hex', action='store_true', 
+                       'characters such as ";" may need to be escaped.')
+    parser.add_argument('-x', '--parse-hex', action='store_true',
                         help='parse hex encoded characters to ascii')
     parser.add_argument('-a', '--arrays', action='store_true',
                         help='substitute array references for declared values')
