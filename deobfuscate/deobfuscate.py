@@ -33,7 +33,7 @@ def recur_split(token, delim):
     Splits token on delimiter, returns flat array of tokens.
     """
     if not token:
-        return None
+        return
     elif isinstance(token, str):
         if not delim in token:
             return [token]
@@ -207,12 +207,12 @@ def main():
                         help='substitute array references for declared values')
     parser.add_argument('-r', '--range', nargs=2, type=int, metavar=('<start>', '<end>'),
                         help='range of lines to parse (non-inclusive). ' +
-                        'applied before other actions.') 
+                        'applied before other actions.')
     args = parser.parse_args()
     with open(args.infile, 'r') as fd:
         tokens = fd.readlines()
-    if (not args.linebreaks and not args.delimiter and not args.hex and 
-        not args.arrays and not args.range):            
+    if (not args.linebreaks and not args.delimiter and not args.hex and
+            not args.arrays and not args.range):
         tokens = generate_linebreaks(tokens)
         tokens = parse_hexchars(tokens)
         tokens = substitute_array_references(tokens, find_arrays(tokens))
