@@ -118,7 +118,6 @@ function addListeners(){document[_0x652a[4]](_0x652a[3])[_0x652a[2]][_0x652a[1]]
 ---
 
 ## Setup
-### Run tests:
 
 `git clone https://github.com/jams2/deobfuscate.git`
 
@@ -132,8 +131,12 @@ function addListeners(){document[_0x652a[4]](_0x652a[3])[_0x652a[2]][_0x652a[1]]
 
 `pip install -e .`
 
+
+### Run tests:
+
+From top directory:
+
 `pytest`
 
 `coverage run -m pytest && coverage report`
-
 
