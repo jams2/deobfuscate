@@ -3,7 +3,8 @@
 This script un-mangles Javascript obscured by common techniques.
 
 ---
-##Usage
+
+## Usage
 
 `$ python deobfuscate.py -h`
 
@@ -26,7 +27,7 @@ optional arguments:
                             range of lines to parse (non-inclusive). applied before other actions.
 ```
 
-###Example
+### Example
 
 `input.js`:
 
@@ -115,8 +116,9 @@ function addListeners(){document[_0x652a[4]](_0x652a[3])[_0x652a[2]][_0x652a[1]]
 
 
 ---
-##Setup
-###Run tests:
+
+## Setup
+### Run tests:
 
 `git clone https://github.com/jams2/deobfuscate.git`
 
