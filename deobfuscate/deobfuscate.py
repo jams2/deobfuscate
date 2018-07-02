@@ -30,7 +30,13 @@ def generate_linebreaks(tokens, *args):
 def recur_split(token, delim):
     """
     token (list | str), delim (str)
+
     Splits token on delimiter, returns flat array of tokens.
+    This method might be passed a list if we are calling
+    generate_linebreaks() with multiple delimiters, in which case we
+    perform the method recursively, returning a flat array so the
+    result after calling generate_linebreaks() is always a 1d array of
+    tokens split on specified delimiters.
     """
     if not token:
         return
@@ -40,8 +46,7 @@ def recur_split(token, delim):
         token = token.split(delim)
         for i in range(0, len(token)-1):
             token[i] += delim
-        token = [x for x in token if x != '']
-        return token
+        return [x for x in token if x]
     elif isinstance(token, list):
         split_tokens = []
         for x in token:
